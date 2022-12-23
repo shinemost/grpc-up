@@ -1,0 +1,10 @@
+web:
+  name: 'gprc-up'
+  mode: 'dev'
+  port: 9090
+mysql:
+  host: localhost
+  port: 3306
+  user: 'root'
+  password: 'password'
+  dbname: 'grpc'
