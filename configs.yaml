@@ -1,7 +1,7 @@
 web:
   name: 'gprc-up'
   mode: 'dev'
-  port: 9090
+  port: 50051
 mysql:
   host: localhost
   port: 3306

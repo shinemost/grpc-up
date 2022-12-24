@@ -3,6 +3,7 @@ module github.com/shinemost/grpc-up
 go 1.19
 
 require (
+	github.com/satori/go.uuid v1.2.0
 	github.com/spf13/viper v1.14.0
 	google.golang.org/grpc v1.51.0
 	google.golang.org/protobuf v1.28.1

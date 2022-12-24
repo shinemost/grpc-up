@@ -3,6 +3,7 @@ package service
 import (
 	"context"
 
+	uuid "github.com/satori/go.uuid"
 	pb "github.com/shinemost/grpc-up/pbs"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
@@ -12,10 +13,21 @@ type server struct {
 	productMap map[string]*pb.Product
 }
 
-func (server *server) AddProduct(context.Context, *pb.Product) (*pb.ProductID, error) {
+func (s *server) AddProduct(ctx context.Context, in *pb.Product) (*pb.ProductID, error) {
+	out := uuid.NewV4()
+	in.Id = out.String()
+	if s.productMap == nil {
+		s.productMap = make(map[string]*pb.Product)
+	}
+	s.productMap[in.Id] = in
 
-	return nil, status.Errorf(codes.Unimplemented, "method AddProduct not implemented")
+	return &pb.ProductID{Value: in.Id}, status.New(codes.OK, "").Err()
 }
-func (server *server) GetProduct(context.Context, *pb.ProductID) (*pb.Product, error) {
-	return nil, status.Errorf(codes.Unimplemented, "method GetProduct not implemented")
+func (s *server) GetProduct(ctx context.Context, in *pb.ProductID) (*pb.Product, error) {
+	value, exists := s.productMap[in.Value]
+	if exists {
+		return value, status.New(codes.OK, "").Err()
+	}
+
+	return nil, status.Errorf(codes.NotFound, "Product does not exists", in.Value)
 }
