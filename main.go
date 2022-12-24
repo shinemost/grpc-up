@@ -1,7 +1,7 @@
 package main
 
-import "github.com/shinemost/grpc-up/settings"
+import "github.com/shinemost/grpc-up/dao/mysql"
 
 func main() {
-	settings.InitConfig()
+	mysql.InitConfig()
 }
