@@ -9,6 +9,7 @@ import (
 type Configs struct {
 	Web
 	Mysqls
+	Grpc
 }
 
 type Mysqls struct {
@@ -23,6 +24,10 @@ type Web struct {
 	Name string
 	Mod  string
 	Port string
+}
+
+type Grpc struct {
+	Address string
 }
 
 var Cfg Configs

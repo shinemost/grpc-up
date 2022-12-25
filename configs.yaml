@@ -1,10 +1,12 @@
 web:
   name: 'gprc-up'
   mode: 'dev'
-  port: 50051
+  port: '50051'
 mysql:
   host: localhost
   port: 3306
   user: 'root'
   password: 'password'
   dbname: 'grpc'
+grpc:
+  address: 'localhost:50051'
