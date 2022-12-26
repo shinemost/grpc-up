@@ -1,6 +1,7 @@
 package main
 
 import (
+	"fmt"
 	"log"
 	"net"
 
@@ -12,16 +13,21 @@ import (
 )
 
 func main() {
-	// settings.InitConfigs()
-	lis, err := net.Listen("tcp", settings.Cfg.Address)
-	if err != nil {
-		log.Fatalf("failed to listen: %v", err)
-	}
+	settings.InitConfigs()
+
 	s := grpc.NewServer()
 	pbs.RegisterProductInfoServer(s, &service.Server{})
+	pbs.RegisterOrderManagementServer(s, &service.OrderServer{})
 
 	//服务器反射方法，客户端可以获取到server元数据
 	reflection.Register(s)
+	fmt.Println(settings.Cfg.Grpc.Address)
+	lis, err := net.Listen("tcp", settings.Cfg.Grpc.Address)
+	if err != nil {
+		log.Fatalf("failed to listen: %v", err)
+	}
+
+	log.Printf("start gRPC server at %s", lis.Addr().String())
 
 	if err := s.Serve(lis); err != nil {
 		log.Fatalf("failed to serve: %v", err)
