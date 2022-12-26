@@ -9,6 +9,7 @@ option go_package = "github.com/shinemost/grpc-up/pbs";
 service OrderManagement{
   rpc addOrder(Order) returns (google.protobuf.StringValue);
   rpc searchOrders(google.protobuf.StringValue) returns (stream Order);
+  rpc updateOrders(stream Order) returns (google.protobuf.StringValue);
 }
 
 

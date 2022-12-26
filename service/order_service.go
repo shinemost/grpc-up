@@ -3,6 +3,7 @@ package service
 import (
 	"context"
 	"fmt"
+	"io"
 	"log"
 	"strings"
 
@@ -10,6 +11,8 @@ import (
 	pb "github.com/shinemost/grpc-up/pbs"
 	"google.golang.org/protobuf/types/known/wrapperspb"
 )
+
+var orderMap = make(map[string]*pb.Order)
 
 type OrderServer struct {
 	pb.UnimplementedOrderManagementServer
@@ -20,16 +23,13 @@ func (s *OrderServer) AddOrder(ctx context.Context, orderReq *pb.Order) (*wrappe
 
 	log.Printf("Order Added. ID : %v", orderReq.Id)
 
-	if s.orderMap == nil {
-		s.orderMap = make(map[string]*pb.Order)
-	}
-	s.orderMap[orderReq.Id] = orderReq
+	orderMap[orderReq.Id] = orderReq
 	return &wrapperspb.StringValue{Value: "Order Added: " + orderReq.Id}, nil
 }
 
 func (s *OrderServer) SearchOrders(searchQuery *wrappers.StringValue, stream pb.OrderManagement_SearchOrdersServer) error {
 
-	for key, order := range s.orderMap {
+	for key, order := range orderMap {
 		log.Print(key, order)
 		for _, itemStr := range order.Items {
 			log.Print(itemStr)
@@ -44,4 +44,18 @@ func (s *OrderServer) SearchOrders(searchQuery *wrappers.StringValue, stream pb.
 		}
 	}
 	return nil
+}
+
+func (s *OrderServer) UpdateOrders(stream pb.OrderManagement_UpdateOrdersServer) error {
+	ordersStr := "Updated Order IDs:"
+	for {
+		order, err := stream.Recv()
+		if err == io.EOF {
+			return stream.SendAndClose(&wrapperspb.StringValue{Value: "Orders processed" + ordersStr})
+		}
+		orderMap[order.Id] = order
+		log.Println("Order ID", order.Id, ":Updated")
+		ordersStr += order.Id + ","
+	}
+
 }
