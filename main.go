@@ -16,7 +16,8 @@ import (
 func main() {
 	settings.InitConfigs()
 
-	s := grpc.NewServer(grpc.UnaryInterceptor(interceptor.OrderUnaryServerInterceptor))
+	s := grpc.NewServer(grpc.UnaryInterceptor(interceptor.OrderUnaryServerInterceptor),
+		grpc.StreamInterceptor(interceptor.OrderServerStreamInterceptor))
 	pbs.RegisterProductInfoServer(s, &service.Server{})
 	pbs.RegisterOrderManagementServer(s, &service.OrderServer{})
 
