@@ -2,6 +2,7 @@ package main
 
 import (
 	"fmt"
+	"github.com/shinemost/grpc-up/interceptor"
 	"log"
 	"net"
 
@@ -15,7 +16,7 @@ import (
 func main() {
 	settings.InitConfigs()
 
-	s := grpc.NewServer()
+	s := grpc.NewServer(grpc.UnaryInterceptor(interceptor.OrderUnaryServerInterceptor))
 	pbs.RegisterProductInfoServer(s, &service.Server{})
 	pbs.RegisterOrderManagementServer(s, &service.OrderServer{})
 
