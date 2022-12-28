@@ -31,10 +31,11 @@ func (s *OrderServer) AddOrder(ctx context.Context, orderReq *pb.Order) (*wrappe
 	time.Sleep(time.Duration(sleepDuration) * time.Second)
 
 	//服务端判断是否超时错误
-	if ctx.Err() == context.DeadlineExceeded {
-		log.Printf("RPC has reached deadline exceeded state: %s", ctx.Err())
-		return nil, ctx.Err()
-	}
+	//if ctx.Err() == context.DeadlineExceeded {
+	//	log.Printf("RPC has reached deadline exceeded state: %s", ctx.Err())
+	//	return nil, ctx.Err()
+	//}
+
 	log.Printf("Order Added. ID : %v", orderReq.Id)
 
 	return &wrapperspb.StringValue{Value: "Order Added: " + orderReq.Id}, nil
@@ -65,6 +66,12 @@ func (s *OrderServer) UpdateOrders(stream pb.OrderManagement_UpdateOrdersServer)
 		order, err := stream.Recv()
 		if err == io.EOF {
 			return stream.SendAndClose(&wrapperspb.StringValue{Value: "Orders processed" + ordersStr})
+		}
+		// You can determine whether the current RPC is cancelled by the other party.
+		if stream.Context().Err() == context.Canceled {
+			log.Printf(" Context Cacelled for this stream: -> %s", stream.Context().Err())
+			log.Printf("Stopped update any more order of this stream!")
+			return stream.Context().Err()
 		}
 		orderMap[order.Id] = order
 		log.Println("Order ID", order.Id, ":Updated")
