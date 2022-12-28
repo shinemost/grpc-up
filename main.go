@@ -18,6 +18,8 @@ func main() {
 
 	s := grpc.NewServer(grpc.UnaryInterceptor(interceptor.OrderUnaryServerInterceptor),
 		grpc.StreamInterceptor(interceptor.OrderServerStreamInterceptor))
+
+	//RPC服务端多路复用，一个RPCserver注册多个服务
 	pbs.RegisterProductInfoServer(s, &service.Server{})
 	pbs.RegisterOrderManagementServer(s, &service.OrderServer{})
 
