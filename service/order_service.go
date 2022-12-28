@@ -3,14 +3,15 @@ package service
 import (
 	"context"
 	"fmt"
+	"github.com/golang/protobuf/ptypes/wrappers"
+	pb "github.com/shinemost/grpc-up/pbs"
+	epb "google.golang.org/genproto/googleapis/rpc/errdetails"
+	"google.golang.org/grpc/codes"
+	"google.golang.org/grpc/status"
+	"google.golang.org/protobuf/types/known/wrapperspb"
 	"io"
 	"log"
 	"strings"
-	"time"
-
-	"github.com/golang/protobuf/ptypes/wrappers"
-	pb "github.com/shinemost/grpc-up/pbs"
-	"google.golang.org/protobuf/types/known/wrapperspb"
 )
 
 const orderBatchSize = 3
@@ -24,11 +25,23 @@ type OrderServer struct {
 
 func (s *OrderServer) AddOrder(ctx context.Context, orderReq *pb.Order) (*wrappers.StringValue, error) {
 
+	if orderReq.Id == "-1" {
+		errorStatus := status.New(codes.InvalidArgument, "非法ID参数")
+		ds, err := errorStatus.WithDetails(&epb.BadRequest_FieldViolation{
+			Field:       "ID",
+			Description: fmt.Sprintf("Order ID 是非法的 %s : %s", orderReq.Id, orderReq.Description),
+		})
+		if err != nil {
+			return nil, errorStatus.Err()
+		}
+		return nil, ds.Err()
+	}
+
 	orderMap[orderReq.Id] = orderReq
 
-	sleepDuration := 5
-	log.Println("sleeping for ", sleepDuration, " s")
-	time.Sleep(time.Duration(sleepDuration) * time.Second)
+	//sleepDuration := 5
+	//log.Println("sleeping for ", sleepDuration, " s")
+	//time.Sleep(time.Duration(sleepDuration) * time.Second)
 
 	//服务端判断是否超时错误
 	//if ctx.Err() == context.DeadlineExceeded {
