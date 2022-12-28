@@ -6,6 +6,7 @@ import (
 	"io"
 	"log"
 	"strings"
+	"time"
 
 	"github.com/golang/protobuf/ptypes/wrappers"
 	pb "github.com/shinemost/grpc-up/pbs"
@@ -23,9 +24,19 @@ type OrderServer struct {
 
 func (s *OrderServer) AddOrder(ctx context.Context, orderReq *pb.Order) (*wrappers.StringValue, error) {
 
+	orderMap[orderReq.Id] = orderReq
+
+	sleepDuration := 5
+	log.Println("sleeping for ", sleepDuration, " s")
+	time.Sleep(time.Duration(sleepDuration) * time.Second)
+
+	//服务端判断是否超时错误
+	if ctx.Err() == context.DeadlineExceeded {
+		log.Printf("RPC has reached deadline exceeded state: %s", ctx.Err())
+		return nil, ctx.Err()
+	}
 	log.Printf("Order Added. ID : %v", orderReq.Id)
 
-	orderMap[orderReq.Id] = orderReq
 	return &wrapperspb.StringValue{Value: "Order Added: " + orderReq.Id}, nil
 }
 
