@@ -6,12 +6,15 @@ import (
 	"github.com/golang/protobuf/ptypes/wrappers"
 	pb "github.com/shinemost/grpc-up/pbs"
 	epb "google.golang.org/genproto/googleapis/rpc/errdetails"
+	"google.golang.org/grpc"
 	"google.golang.org/grpc/codes"
+	"google.golang.org/grpc/metadata"
 	"google.golang.org/grpc/status"
 	"google.golang.org/protobuf/types/known/wrapperspb"
 	"io"
 	"log"
 	"strings"
+	"time"
 )
 
 const orderBatchSize = 3
@@ -38,6 +41,22 @@ func (s *OrderServer) AddOrder(ctx context.Context, orderReq *pb.Order) (*wrappe
 	}
 
 	orderMap[orderReq.Id] = orderReq
+
+	// ***** Reading Metadata from Client *****
+	md, metadataAvailable := metadata.FromIncomingContext(ctx)
+	if !metadataAvailable {
+		return nil, status.Errorf(codes.DataLoss, "error: failed to get metadata")
+	}
+	if t, ok := md["timestamp"]; ok {
+		fmt.Printf("timestamp from metadata:\n")
+		for i, e := range t {
+			fmt.Printf("====> Metadata %d. %s\n", i, e)
+		}
+	}
+
+	// Creating and sending a header.
+	header := metadata.New(map[string]string{"location": "San Jose", "timestamp": time.Now().Format(time.StampNano)})
+	_ = grpc.SendHeader(ctx, header)
 
 	//sleepDuration := 5
 	//log.Println("sleeping for ", sleepDuration, " s")
