@@ -3,18 +3,20 @@ package service
 import (
 	"context"
 	"fmt"
+	"io"
+	"log"
+	"strings"
+	"time"
+
 	"github.com/golang/protobuf/ptypes/wrappers"
 	pb "github.com/shinemost/grpc-up/pbs"
 	epb "google.golang.org/genproto/googleapis/rpc/errdetails"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/codes"
+	_ "google.golang.org/grpc/encoding/gzip"
 	"google.golang.org/grpc/metadata"
 	"google.golang.org/grpc/status"
 	"google.golang.org/protobuf/types/known/wrapperspb"
-	"io"
-	"log"
-	"strings"
-	"time"
 )
 
 const orderBatchSize = 3

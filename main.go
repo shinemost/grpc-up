@@ -1,11 +1,19 @@
 package main
 
 import (
+	"fmt"
+	"log"
+	"net"
+
+	"github.com/shinemost/grpc-up/interceptor"
+	"github.com/shinemost/grpc-up/pbs"
 	"github.com/shinemost/grpc-up/service"
-	"sync"
+	"github.com/shinemost/grpc-up/settings"
+	"google.golang.org/grpc"
+	"google.golang.org/grpc/reflection"
 )
 
-/*func main() {
+func main() {
 	settings.InitConfigs()
 
 	s := grpc.NewServer(grpc.UnaryInterceptor(interceptor.OrderUnaryServerInterceptor),
@@ -28,16 +36,16 @@ import (
 	if err := s.Serve(lis); err != nil {
 		log.Fatalf("failed to serve: %v", err)
 	}
-}*/
-
-func main() {
-	var wg sync.WaitGroup
-	for _, addr := range service.Addrs {
-		wg.Add(1)
-		go func(addr string) {
-			defer wg.Done()
-			service.StartServer(addr)
-		}(addr)
-	}
-	wg.Wait()
 }
+
+// func main() {
+// 	var wg sync.WaitGroup
+// 	for _, addr := range service.Addrs {
+// 		wg.Add(1)
+// 		go func(addr string) {
+// 			defer wg.Done()
+// 			service.StartServer(addr)
+// 		}(addr)
+// 	}
+// 	wg.Wait()
+// }
