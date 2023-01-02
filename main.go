@@ -2,9 +2,11 @@ package main
 
 import (
 	"crypto/tls"
+	"crypto/x509"
 	"fmt"
 	"log"
 	"net"
+	"os"
 
 	"github.com/shinemost/grpc-up/interceptor"
 	"github.com/shinemost/grpc-up/pbs"
@@ -25,10 +27,26 @@ func main() {
 		log.Fatalf("failed to load x509 key pair : %s", err)
 	}
 
+	certPool := x509.NewCertPool()
+	ca, err := os.ReadFile(settings.Cfg.CaFile)
+	if err != nil {
+		log.Fatalf("could not read ca certificate: %s", err)
+	}
+
+	if ok := certPool.AppendCertsFromPEM(ca); !ok {
+		log.Fatalf("failed to append ca cert")
+	}
+
 	s := grpc.NewServer(
 		grpc.UnaryInterceptor(interceptor.OrderUnaryServerInterceptor),
 		grpc.StreamInterceptor(interceptor.OrderServerStreamInterceptor),
-		grpc.Creds(credentials.NewServerTLSFromCert(&cert)),
+		grpc.Creds(
+			credentials.NewTLS(&tls.Config{
+				ClientAuth:   tls.RequireAndVerifyClientCert,
+				Certificates: []tls.Certificate{cert},
+				ClientCAs:    certPool,
+			}),
+		),
 	)
 
 	//RPC服务端多路复用，一个RPCserver注册多个服务

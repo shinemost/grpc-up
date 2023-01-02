@@ -4,6 +4,7 @@ web:
   port: '50051'
   crtFile: 'certs/server.pem'
   keyFile: 'certs/server.key'
+  caFile: 'certs/ca.crt'
 mysql:
   host: localhost
   port: 3306

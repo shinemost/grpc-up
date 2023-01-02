@@ -26,6 +26,7 @@ type Web struct {
 	Port    string
 	CrtFile string
 	KeyFile string
+	CaFile  string
 }
 
 type Grpc struct {
