@@ -72,3 +72,23 @@ func valid(authorization []string) bool {
 	token := strings.TrimPrefix(authorization[0], "Basic ")
 	return token == base64.StdEncoding.EncodeToString([]byte("admin:admin"))
 }
+
+func EnsureVaildTokenCredentials(ctx context.Context, req interface{}, info *grpc.UnaryServerInfo,
+	handler grpc.UnaryHandler) (interface{}, error) {
+	md, ok := metadata.FromIncomingContext(ctx)
+	if !ok {
+		return nil, status.Errorf(codes.InvalidArgument, "missing metadata")
+	}
+	if !validToken(md["authorization"]) {
+		return nil, status.Errorf(codes.Unauthenticated, "invaild credentials")
+	}
+	return handler(ctx, req)
+}
+
+func validToken(authorization []string) bool {
+	if len(authorization) < 1 {
+		return false
+	}
+	token := strings.TrimPrefix(authorization[0], "Bearer ")
+	return token == "some-secret-token"
+}

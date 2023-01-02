@@ -39,7 +39,8 @@ func main() {
 	s := grpc.NewServer(
 		//grpc.UnaryInterceptor(interceptor.OrderUnaryServerInterceptor),
 		//grpc.StreamInterceptor(interceptor.OrderServerStreamInterceptor),
-		grpc.UnaryInterceptor(interceptor.EnsureVaildBasicCredentials),
+		//grpc.UnaryInterceptor(interceptor.EnsureVaildBasicCredentials),
+		grpc.UnaryInterceptor(interceptor.EnsureVaildTokenCredentials),
 		grpc.Creds(
 			credentials.NewTLS(&tls.Config{
 				ClientAuth:   tls.RequireAndVerifyClientCert,
