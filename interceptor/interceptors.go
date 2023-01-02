@@ -2,8 +2,13 @@ package interceptor
 
 import (
 	"context"
+	"encoding/base64"
 	"google.golang.org/grpc"
+	"google.golang.org/grpc/codes"
+	"google.golang.org/grpc/metadata"
+	"google.golang.org/grpc/status"
 	"log"
+	"strings"
 	"time"
 )
 
@@ -46,4 +51,24 @@ func OrderServerStreamInterceptor(srv interface{}, ss grpc.ServerStream, info *g
 		log.Printf("RPC failed with error %v", err)
 	}
 	return err
+}
+
+func EnsureVaildBasicCredentials(ctx context.Context, req interface{}, info *grpc.UnaryServerInfo,
+	handler grpc.UnaryHandler) (interface{}, error) {
+	md, ok := metadata.FromIncomingContext(ctx)
+	if !ok {
+		return nil, status.Errorf(codes.InvalidArgument, "missing metadata")
+	}
+	if !valid(md["authorization"]) {
+		return nil, status.Errorf(codes.Unauthenticated, "invaild credentials")
+	}
+	return handler(ctx, req)
+}
+
+func valid(authorization []string) bool {
+	if len(authorization) < 1 {
+		return false
+	}
+	token := strings.TrimPrefix(authorization[0], "Basic ")
+	return token == base64.StdEncoding.EncodeToString([]byte("admin:admin"))
 }

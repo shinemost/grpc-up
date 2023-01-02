@@ -4,11 +4,11 @@ import (
 	"crypto/tls"
 	"crypto/x509"
 	"fmt"
+	"github.com/shinemost/grpc-up/interceptor"
 	"log"
 	"net"
 	"os"
 
-	"github.com/shinemost/grpc-up/interceptor"
 	"github.com/shinemost/grpc-up/pbs"
 	"github.com/shinemost/grpc-up/service"
 	"github.com/shinemost/grpc-up/settings"
@@ -20,7 +20,6 @@ import (
 func main() {
 	settings.InitConfigs()
 
-	//
 	cert, err := tls.LoadX509KeyPair(settings.Cfg.CrtFile, settings.Cfg.KeyFile)
 
 	if err != nil {
@@ -38,8 +37,9 @@ func main() {
 	}
 
 	s := grpc.NewServer(
-		grpc.UnaryInterceptor(interceptor.OrderUnaryServerInterceptor),
-		grpc.StreamInterceptor(interceptor.OrderServerStreamInterceptor),
+		//grpc.UnaryInterceptor(interceptor.OrderUnaryServerInterceptor),
+		//grpc.StreamInterceptor(interceptor.OrderServerStreamInterceptor),
+		grpc.UnaryInterceptor(interceptor.EnsureVaildBasicCredentials),
 		grpc.Creds(
 			credentials.NewTLS(&tls.Config{
 				ClientAuth:   tls.RequireAndVerifyClientCert,
