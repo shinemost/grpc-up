@@ -1,6 +1,7 @@
 package main
 
 import (
+	"crypto/tls"
 	"fmt"
 	"log"
 	"net"
@@ -10,14 +11,25 @@ import (
 	"github.com/shinemost/grpc-up/service"
 	"github.com/shinemost/grpc-up/settings"
 	"google.golang.org/grpc"
+	"google.golang.org/grpc/credentials"
 	"google.golang.org/grpc/reflection"
 )
 
 func main() {
 	settings.InitConfigs()
 
-	s := grpc.NewServer(grpc.UnaryInterceptor(interceptor.OrderUnaryServerInterceptor),
-		grpc.StreamInterceptor(interceptor.OrderServerStreamInterceptor))
+	//
+	cert, err := tls.LoadX509KeyPair(settings.Cfg.CrtFile, settings.Cfg.KeyFile)
+
+	if err != nil {
+		log.Fatalf("failed to load x509 key pair : %s", err)
+	}
+
+	s := grpc.NewServer(
+		grpc.UnaryInterceptor(interceptor.OrderUnaryServerInterceptor),
+		grpc.StreamInterceptor(interceptor.OrderServerStreamInterceptor),
+		grpc.Creds(credentials.NewServerTLSFromCert(&cert)),
+	)
 
 	//RPC服务端多路复用，一个RPCserver注册多个服务
 	pbs.RegisterProductInfoServer(s, &service.Server{})

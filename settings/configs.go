@@ -21,9 +21,11 @@ type Mysqls struct {
 }
 
 type Web struct {
-	Name string
-	Mod  string
-	Port string
+	Name    string
+	Mod     string
+	Port    string
+	CrtFile string
+	KeyFile string
 }
 
 type Grpc struct {
