@@ -27,7 +27,11 @@ genSANCert:
 	openssl x509 -req -days 365 -in certs/server.csr -out certs/server.pem -CA certs/ca.crt -CAkey certs/ca.key -CAcreateserial -extfile ./openssl.cnf -extensions v3_req
 
 performanceTest :
-	ghz --insecure --skipTLS --proto protos/order_management.proto --call pbs.OrderManagement.addOrder -d '{\"id\":\"1\",\"items\":[\"合肥\",\"济南\"],\"description\":\"地名\",\"price\":123.5,\"destination\":\"中国\"}' -n 2000 -c 20 localhost:50051 -O html -o result.html
+# windows平台上需要对双引号进行转义，否则会报错
+# ghz --insecure --skipTLS --proto protos/order_management.proto --call pbs.OrderManagement.addOrder -d '{\"id\":\"1\",\"items\":[\"合肥\",\"济南\"],\"description\":\"地名\",\"price\":123.5,\"destination\":\"中国\"}' -n 2000 -c 20 localhost:50051 -O html -o result.html
+	ghz --insecure --skipTLS --proto protos/order_management.proto --call pbs.OrderManagement.addOrder -d '{"id":"1","items":["合肥","济南"],"description":"地名","price":123.5,"destination":"中国"}' -n 2000 -c 1 localhost:50051 -O html -o result.html
+	ghz --insecure --skipTLS --proto protos/ProductInfo.proto --call pbs.ProductInfo.getProduct -d '{"value":"1"}' -n 2000 -c 20 localhost:50051
+
 
 
 .PHONY: proto genSANCert performanceTest
