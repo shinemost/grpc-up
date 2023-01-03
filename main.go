@@ -4,7 +4,6 @@ import (
 	"crypto/tls"
 	"crypto/x509"
 	"fmt"
-	"github.com/shinemost/grpc-up/interceptor"
 	"log"
 	"net"
 	"os"
@@ -13,14 +12,13 @@ import (
 	"github.com/shinemost/grpc-up/service"
 	"github.com/shinemost/grpc-up/settings"
 	"google.golang.org/grpc"
-	"google.golang.org/grpc/credentials"
 	"google.golang.org/grpc/reflection"
 )
 
 func main() {
 	settings.InitConfigs()
 
-	cert, err := tls.LoadX509KeyPair(settings.Cfg.CrtFile, settings.Cfg.KeyFile)
+	_, err := tls.LoadX509KeyPair(settings.Cfg.CrtFile, settings.Cfg.KeyFile)
 
 	if err != nil {
 		log.Fatalf("failed to load x509 key pair : %s", err)
@@ -37,17 +35,17 @@ func main() {
 	}
 
 	s := grpc.NewServer(
-		//grpc.UnaryInterceptor(interceptor.OrderUnaryServerInterceptor),
-		//grpc.StreamInterceptor(interceptor.OrderServerStreamInterceptor),
-		//grpc.UnaryInterceptor(interceptor.EnsureVaildBasicCredentials),
-		grpc.UnaryInterceptor(interceptor.EnsureVaildTokenCredentials),
-		grpc.Creds(
-			credentials.NewTLS(&tls.Config{
-				ClientAuth:   tls.RequireAndVerifyClientCert,
-				Certificates: []tls.Certificate{cert},
-				ClientCAs:    certPool,
-			}),
-		),
+	//grpc.UnaryInterceptor(interceptor.OrderUnaryServerInterceptor),
+	//grpc.StreamInterceptor(interceptor.OrderServerStreamInterceptor),
+	//grpc.UnaryInterceptor(interceptor.EnsureVaildBasicCredentials),
+	//grpc.UnaryInterceptor(interceptor.EnsureVaildTokenCredentials),
+	//grpc.Creds(
+	//	credentials.NewTLS(&tls.Config{
+	//		ClientAuth:   tls.RequireAndVerifyClientCert,
+	//		Certificates: []tls.Certificate{cert},
+	//		ClientCAs:    certPool,
+	//	}),
+	//),
 	)
 
 	//RPC服务端多路复用，一个RPCserver注册多个服务

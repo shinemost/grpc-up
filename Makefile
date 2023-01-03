@@ -26,5 +26,8 @@ genSANCert:
 # 2.3 请求CA对证书请求文件签名，生成最终证书文件
 	openssl x509 -req -days 365 -in certs/server.csr -out certs/server.pem -CA certs/ca.crt -CAkey certs/ca.key -CAcreateserial -extfile ./openssl.cnf -extensions v3_req
 
+performanceTest :
+	ghz --insecure --skipTLS --proto protos/order_management.proto --call pbs.OrderManagement.addOrder -d '{\"id\":\"1\",\"items\":[\"合肥\",\"济南\"],\"description\":\"地名\",\"price\":123.5,\"destination\":\"中国\"}' -n 2000 -c 20 localhost:50051 -O html -o result.html
 
-.PHONY: proto genSANCert
+
+.PHONY: proto genSANCert performanceTest
