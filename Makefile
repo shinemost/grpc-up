@@ -32,6 +32,7 @@ performanceTest :
 	ghz --insecure --skipTLS --proto protos/order_management.proto --call pbs.OrderManagement.addOrder -d '{"id":"1","items":["合肥","济南"],"description":"地名","price":123.5,"destination":"中国"}' -n 2000 -c 1 localhost:50051 -O html -o result.html
 	ghz --insecure --skipTLS --proto protos/ProductInfo.proto --call pbs.ProductInfo.getProduct -d '{"value":"1"}' -n 2000 -c 20 localhost:50051
 
-
+build:
+	docker build --no-cache -t supertain147/grpc-server:v1.0 .
 
 .PHONY: proto genSANCert performanceTest
