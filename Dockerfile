@@ -18,11 +18,12 @@ RUN go install ./...
 
 RUN go build -mod=mod -o grpc-server .
 
-FROM scratch
+FROM alpine
 WORKDIR /app
 
 COPY --from=build /app/grpc-server ./grpc-server
 COPY ./configs.yaml ./configs.yaml
+COPY ./certs ./certs
 
 ENTRYPOINT ["/app/grpc-server"]
 EXPOSE 50051
