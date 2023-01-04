@@ -44,4 +44,6 @@ push:
 run:
 	docker run -d --name grpc-server --network=grpc-net --hostname=grpc-server -p 50051:50051 supertain147/grpc-server:v1.0
 
+apply:
+	kubectl apply -f grpc-server.yaml
 .PHONY: proto genSANCert performanceTest run
