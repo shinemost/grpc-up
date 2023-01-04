@@ -33,6 +33,9 @@ performanceTest :
 	ghz --insecure --skipTLS --proto protos/ProductInfo.proto --call pbs.ProductInfo.getProduct -d '{"value":"1"}' -n 2000 -c 20 localhost:50051
 
 build:
-	docker build --no-cache -t supertain147/grpc-server:v1.2 .
+	docker build --no-cache -t supertain147/grpc-server:v1.0 .
 
-.PHONY: proto genSANCert performanceTest
+run:
+	docker run -d --name grpc-server -p 50051:50051 supertain147/grpc-server:v1.0
+
+.PHONY: proto genSANCert performanceTest run
