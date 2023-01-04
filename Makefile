@@ -38,6 +38,9 @@ network:
 build:
 	docker build --no-cache -t supertain147/grpc-server:v1.0 .
 
+push:
+	docker push supertain147/grpc-server:v1.0 .
+
 run:
 	docker run -d --name grpc-server --network=grpc-net --hostname=grpc-server -p 50051:50051 supertain147/grpc-server:v1.0
 
