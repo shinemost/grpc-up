@@ -38,6 +38,10 @@ network:
 build:
 	docker build --no-cache -t supertain147/grpc-server:v1.0 .
 
+buildx:
+	docker buildx build --platform linux/amd64,linux/arm64 -t supertain147/grpc-server:v1.6 --push .
+
+
 push:
 	docker push supertain147/grpc-server:v1.0 .
 
@@ -46,4 +50,4 @@ run:
 
 apply:
 	kubectl apply -f grpc-server.yaml
-.PHONY: proto genSANCert performanceTest run
+.PHONY: proto genSANCert performanceTest run push apply buildx

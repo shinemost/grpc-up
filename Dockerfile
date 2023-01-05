@@ -1,11 +1,13 @@
-FROM golang:alpine AS build
+FROM --platform=$BUILDPLATFORM golang:alpine AS build
 
 LABEL maintainer="hjfu"
+
+ARG TARGETARCH
 
 ENV GO11MODULE=on \
   CGO_ENABLE=on \
   GOOS=linux \
-  GOARCH=arm64
+  GOARCH=$TARGETARCH
 
 WORKDIR /app
 COPY . .
