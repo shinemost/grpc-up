@@ -14,11 +14,11 @@ spec:
     spec:
       containers:
         - name: grpc-server
-          image: supertain147/grpc-server:v1.5
+          image: supertain147/grpc-server:v1.6
           resources:
             limits:
               memory: "128Mi"
-              cpu: "500m"
+              cpu: "100m"
           ports:
             - containerPort: 50051
               name: grpc
@@ -33,5 +33,6 @@ spec:
   ports:
     - port: 50051
       targetPort: 50051
+      name: grpc
   type: NodePort
 

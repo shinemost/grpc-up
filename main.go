@@ -4,20 +4,41 @@ import (
 	"crypto/tls"
 	"crypto/x509"
 	"fmt"
+	"go.opencensus.io/examples/exporter"
+	"go.opencensus.io/plugin/ocgrpc"
+	"go.opencensus.io/stats/view"
 	"google.golang.org/grpc/credentials"
 	"log"
 	"net"
+	"net/http"
 	"os"
 
 	"github.com/shinemost/grpc-up/pbs"
 	"github.com/shinemost/grpc-up/service"
 	"github.com/shinemost/grpc-up/settings"
+	"go.opencensus.io/zpages"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/reflection"
 )
 
 func main() {
 	settings.InitConfigs()
+
+	// Start z-Pages server.
+	go func() {
+		mux := http.NewServeMux()
+		zpages.Handle(mux, "/debug")
+		log.Fatal(http.ListenAndServe("127.0.0.1:9999", mux))
+	}()
+
+	// Register stats and trace exporters to export
+	// the collected data.
+	view.RegisterExporter(&exporter.PrintExporter{})
+
+	// Register the views to collect server request count.
+	if err := view.Register(ocgrpc.DefaultServerViews...); err != nil {
+		log.Fatal(err)
+	}
 
 	cert, err := tls.LoadX509KeyPair(settings.Cfg.CrtFile, settings.Cfg.KeyFile)
 
@@ -47,6 +68,7 @@ func main() {
 				ClientCAs:    certPool,
 			}),
 		),
+		grpc.StatsHandler(&ocgrpc.ServerHandler{}),
 	)
 
 	//RPC服务端多路复用，一个RPCserver注册多个服务
