@@ -4,32 +4,34 @@ import (
 	"crypto/tls"
 	"crypto/x509"
 	"fmt"
+	"github.com/shinemost/grpc-up/pbs"
+	"github.com/shinemost/grpc-up/service"
+	"github.com/shinemost/grpc-up/settings"
 	"go.opencensus.io/examples/exporter"
 	"go.opencensus.io/plugin/ocgrpc"
 	"go.opencensus.io/stats/view"
+	"go.opencensus.io/zpages"
+	"google.golang.org/grpc"
 	"google.golang.org/grpc/credentials"
+	"google.golang.org/grpc/reflection"
 	"log"
 	"net"
 	"net/http"
 	"os"
-
-	"github.com/shinemost/grpc-up/pbs"
-	"github.com/shinemost/grpc-up/service"
-	"github.com/shinemost/grpc-up/settings"
-	"go.opencensus.io/zpages"
-	"google.golang.org/grpc"
-	"google.golang.org/grpc/reflection"
 )
 
 func main() {
-	settings.InitConfigs()
-
 	// Start z-Pages server.
 	go func() {
 		mux := http.NewServeMux()
 		zpages.Handle(mux, "/debug")
-		log.Fatal(http.ListenAndServe("127.0.0.1:9999", mux))
+		addr := "127.0.0.1:8888"
+		if err := http.ListenAndServe(addr, mux); err != nil {
+			log.Fatalf("Failed to serve zPages")
+		}
 	}()
+
+	settings.InitConfigs()
 
 	// Register stats and trace exporters to export
 	// the collected data.
@@ -88,6 +90,7 @@ func main() {
 	if err := s.Serve(lis); err != nil {
 		log.Fatalf("failed to serve: %v", err)
 	}
+
 }
 
 // func main() {
@@ -101,3 +104,12 @@ func main() {
 // 	}
 // 	wg.Wait()
 // }
+
+//func main() {
+//	mux := http.NewServeMux()
+//	zpages.Handle(mux, "/debug")
+//	addr := ":8888"
+//	if err := http.ListenAndServe(addr, mux); err != nil {
+//		log.Fatalf("Failed to serve zPages")
+//	}
+//}
