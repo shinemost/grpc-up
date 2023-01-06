@@ -2,11 +2,19 @@ package service
 
 import (
 	"context"
+	"github.com/prometheus/client_golang/prometheus"
 
 	uuid "github.com/satori/go.uuid"
 	pb "github.com/shinemost/grpc-up/pbs"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
+)
+
+var (
+	CustomizedCounterMetric = prometheus.NewCounterVec(prometheus.CounterOpts{
+		Name: "product_mgt_server_handle_count",
+		Help: "Total number of RPCs handled on the server.",
+	}, []string{"name"})
 )
 
 type Server struct {
@@ -15,6 +23,7 @@ type Server struct {
 }
 
 func (s *Server) AddProduct(ctx context.Context, in *pb.Product) (*pb.ProductID, error) {
+	CustomizedCounterMetric.WithLabelValues(in.Name).Inc()
 	out := uuid.NewV4()
 	in.Id = out.String()
 	if s.productMap == nil {

@@ -10,6 +10,7 @@ type Configs struct {
 	Web
 	Mysqls
 	Grpc
+	Prometheus
 }
 
 type Mysqls struct {
@@ -30,6 +31,10 @@ type Web struct {
 }
 
 type Grpc struct {
+	Address string
+}
+
+type Prometheus struct {
 	Address string
 }
 

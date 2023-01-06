@@ -13,3 +13,5 @@ mysql:
   dbname: 'grpc'
 grpc:
   address: ':50051'
+prometheus:
+  address: ':9092'
