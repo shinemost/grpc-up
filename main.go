@@ -1,14 +1,17 @@
 package main
 
 import (
+	"context"
 	"crypto/tls"
 	"crypto/x509"
 	"fmt"
 	"log"
 	"net"
+	"net/http"
 	"os"
 
 	grpc_opentracing "github.com/grpc-ecosystem/go-grpc-middleware/tracing/opentracing"
+	"github.com/grpc-ecosystem/grpc-gateway/v2/runtime"
 	"github.com/opentracing/opentracing-go"
 	"github.com/shinemost/grpc-up/pbs"
 	"github.com/shinemost/grpc-up/service"
@@ -18,6 +21,7 @@ import (
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/credentials"
 	"google.golang.org/grpc/reflection"
+	"google.golang.org/protobuf/encoding/protojson"
 )
 
 func main() {
@@ -32,6 +36,9 @@ func main() {
 	// }()
 
 	settings.InitConfigs()
+
+	//启动http Server
+	go runGatewayServer()
 
 	// Create a HTTP server for prometheus.
 	// httpServer := &http.Server{Handler: promhttp.HandlerFor(reg, promhttp.HandlerOpts{}), Addr: settings.Cfg.Prometheus.Address}
@@ -167,3 +174,31 @@ func main() {
 // 	trace.RegisterExporter(exporter)
 
 // }
+
+func runGatewayServer() {
+
+	serverMuxOption := runtime.WithMarshalerOption(runtime.MIMEWildcard, &runtime.JSONPb{
+		MarshalOptions: protojson.MarshalOptions{
+			UseProtoNames: true,
+		},
+		UnmarshalOptions: protojson.UnmarshalOptions{
+			DiscardUnknown: true,
+		},
+	})
+	grpcMux := runtime.NewServeMux(serverMuxOption)
+
+	ctx, cancel := context.WithCancel(context.Background())
+	defer cancel()
+
+	err := pbs.RegisterProductInfoHandlerServer(ctx, grpcMux, &service.Server{})
+	if err != nil {
+		log.Fatalf("Fail to register gRPC service endpoint: %v", err)
+		return
+	}
+	log.Printf("start HTTP server at %s", settings.Cfg.Web.Port)
+
+	if err := http.ListenAndServe(settings.Cfg.Web.Port, grpcMux); err != nil {
+		log.Fatalf("Could not setup HTTP endpoint: %v", err)
+	}
+
+}

@@ -1,7 +1,7 @@
 web:
-  name: 'gprc-up'
+  name: 'gprc-server'
   mode: 'dev'
-  port: '50051'
+  port: ':50031'
   crtFile: 'certs/server.pem'
   keyFile: 'certs/server.key'
   caFile: 'certs/ca.crt'

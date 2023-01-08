@@ -1,8 +1,9 @@
 proto:
 	rm -rf pbs/*.go
-	protoc --proto_path=protos --go_out=pbs --go_opt=paths=source_relative \
+	protoc --proto_path=proto --go_out=pbs --go_opt=paths=source_relative \
     --go-grpc_out=pbs --go-grpc_opt=paths=source_relative \
-    protos/*.proto
+		--grpc-gateway_out=pbs --grpc-gateway_opt paths=source_relative \
+    proto/*.proto
 
 # GO版本1.15以后，废弃了一般的x509证书，需要采用SAN证书进行通信
 
