@@ -51,4 +51,4 @@ run:
 
 apply:
 	kubectl apply -f grpc-server.yaml
-.PHONY: proto genSANCert performanceTest run push apply buildx
+.PHONY: proto genSANCert performanceTest network run build push apply buildx run
