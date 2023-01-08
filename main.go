@@ -4,7 +4,13 @@ import (
 	"crypto/tls"
 	"crypto/x509"
 	"fmt"
-	"github.com/grpc-ecosystem/go-grpc-prometheus"
+	"log"
+	"net"
+	"net/http"
+	"os"
+
+	"contrib.go.opencensus.io/exporter/jaeger"
+	grpc_prometheus "github.com/grpc-ecosystem/go-grpc-prometheus"
 	"github.com/prometheus/client_golang/prometheus"
 	"github.com/prometheus/client_golang/prometheus/promhttp"
 	"github.com/shinemost/grpc-up/pbs"
@@ -13,14 +19,11 @@ import (
 	"go.opencensus.io/examples/exporter"
 	"go.opencensus.io/plugin/ocgrpc"
 	"go.opencensus.io/stats/view"
+	"go.opencensus.io/trace"
 	"go.opencensus.io/zpages"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/credentials"
 	"google.golang.org/grpc/reflection"
-	"log"
-	"net"
-	"net/http"
-	"os"
 )
 
 func main() {
@@ -79,6 +82,7 @@ func main() {
 		grpc.StatsHandler(&ocgrpc.ServerHandler{}),
 	)
 
+	initTracing()
 	//RPC服务端多路复用，一个RPCserver注册多个服务
 	pbs.RegisterProductInfoServer(s, &service.Server{})
 	pbs.RegisterOrderManagementServer(s, &service.OrderServer{})
@@ -139,4 +143,24 @@ var (
 func init() {
 	// Register standard server metrics and customized metrics to registry.
 	reg.MustRegister(grpcMetrics, service.CustomizedCounterMetric)
+}
+
+func initTracing() {
+	// This is a demo app with low QPS. trace.AlwaysSample() is used here
+	// to make sure traces are available for observation and analysis.
+	// In a production environment or high QPS setup please use
+	// trace.ProbabilitySampler set at the desired probability.
+	trace.ApplyConfig(trace.Config{DefaultSampler: trace.AlwaysSample()})
+	agentEndpointURI := "localhost:6831"
+	collectorEndpointURI := "http://localhost:14268/api/traces"
+	exporter, err := jaeger.NewExporter(jaeger.Options{
+		CollectorEndpoint: collectorEndpointURI,
+		AgentEndpoint:     agentEndpointURI,
+		ServiceName:       "grpc-server",
+	})
+	if err != nil {
+		log.Fatal(err)
+	}
+	trace.RegisterExporter(exporter)
+
 }

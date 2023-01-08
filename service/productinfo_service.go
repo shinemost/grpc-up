@@ -2,7 +2,9 @@ package service
 
 import (
 	"context"
+
 	"github.com/prometheus/client_golang/prometheus"
+	"go.opencensus.io/trace"
 
 	uuid "github.com/satori/go.uuid"
 	pb "github.com/shinemost/grpc-up/pbs"
@@ -23,6 +25,8 @@ type Server struct {
 }
 
 func (s *Server) AddProduct(ctx context.Context, in *pb.Product) (*pb.ProductID, error) {
+	ctx, span := trace.StartSpan(ctx, "product.AddProduct")
+	defer span.End()
 	CustomizedCounterMetric.WithLabelValues(in.Name).Inc()
 	out := uuid.NewV4()
 	in.Id = out.String()
