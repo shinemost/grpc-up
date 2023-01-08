@@ -6,21 +6,15 @@ import (
 	"fmt"
 	"log"
 	"net"
-	"net/http"
 	"os"
 
-	"contrib.go.opencensus.io/exporter/jaeger"
-	grpc_prometheus "github.com/grpc-ecosystem/go-grpc-prometheus"
-	"github.com/prometheus/client_golang/prometheus"
-	"github.com/prometheus/client_golang/prometheus/promhttp"
+	grpc_opentracing "github.com/grpc-ecosystem/go-grpc-middleware/tracing/opentracing"
+	"github.com/opentracing/opentracing-go"
 	"github.com/shinemost/grpc-up/pbs"
 	"github.com/shinemost/grpc-up/service"
 	"github.com/shinemost/grpc-up/settings"
-	"go.opencensus.io/examples/exporter"
+	"github.com/shinemost/grpc-up/tracer"
 	"go.opencensus.io/plugin/ocgrpc"
-	"go.opencensus.io/stats/view"
-	"go.opencensus.io/trace"
-	"go.opencensus.io/zpages"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/credentials"
 	"google.golang.org/grpc/reflection"
@@ -28,28 +22,28 @@ import (
 
 func main() {
 	// Start z-Pages server.
-	go func() {
-		mux := http.NewServeMux()
-		zpages.Handle(mux, "/debug")
-		addr := "127.0.0.1:8888"
-		if err := http.ListenAndServe(addr, mux); err != nil {
-			log.Fatalf("Failed to serve zPages")
-		}
-	}()
+	// go func() {
+	// 	mux := http.NewServeMux()
+	// 	zpages.Handle(mux, "/debug")
+	// 	addr := "127.0.0.1:8888"
+	// 	if err := http.ListenAndServe(addr, mux); err != nil {
+	// 		log.Fatalf("Failed to serve zPages")
+	// 	}
+	// }()
 
 	settings.InitConfigs()
 
 	// Create a HTTP server for prometheus.
-	httpServer := &http.Server{Handler: promhttp.HandlerFor(reg, promhttp.HandlerOpts{}), Addr: settings.Cfg.Prometheus.Address}
+	// httpServer := &http.Server{Handler: promhttp.HandlerFor(reg, promhttp.HandlerOpts{}), Addr: settings.Cfg.Prometheus.Address}
 
 	// Register stats and trace exporters to export
 	// the collected data.
-	view.RegisterExporter(&exporter.PrintExporter{})
+	// view.RegisterExporter(&exporter.PrintExporter{})
 
 	// Register the views to collect server request count.
-	if err := view.Register(ocgrpc.DefaultServerViews...); err != nil {
-		log.Fatal(err)
-	}
+	// if err := view.Register(ocgrpc.DefaultServerViews...); err != nil {
+	// 	log.Fatal(err)
+	// }
 
 	cert, err := tls.LoadX509KeyPair(settings.Cfg.CrtFile, settings.Cfg.KeyFile)
 
@@ -67,6 +61,15 @@ func main() {
 		log.Fatalf("failed to append ca cert")
 	}
 
+	// initialize jaegertracer
+	jaegertracer, closer, err := tracer.NewTracer("grpc-server")
+	if err != nil {
+		log.Fatalln(err)
+	}
+	defer closer.Close()
+
+	opentracing.SetGlobalTracer(jaegertracer)
+
 	s := grpc.NewServer(
 		//grpc.UnaryInterceptor(interceptor.OrderUnaryServerInterceptor),
 		//grpc.StreamInterceptor(interceptor.OrderServerStreamInterceptor),
@@ -80,21 +83,21 @@ func main() {
 			}),
 		),
 		grpc.StatsHandler(&ocgrpc.ServerHandler{}),
+		grpc.UnaryInterceptor(grpc_opentracing.UnaryServerInterceptor(grpc_opentracing.WithTracer(jaegertracer))),
 	)
 
-	initTracing()
 	//RPC服务端多路复用，一个RPCserver注册多个服务
 	pbs.RegisterProductInfoServer(s, &service.Server{})
 	pbs.RegisterOrderManagementServer(s, &service.OrderServer{})
 
 	// Initialize all metrics.
-	grpcMetrics.InitializeMetrics(s)
+	// grpcMetrics.InitializeMetrics(s)
 	// Start your http server for prometheus.
-	go func() {
-		if err := httpServer.ListenAndServe(); err != nil {
-			log.Fatal("Unable to start a http server.")
-		}
-	}()
+	// go func() {
+	// 	if err := httpServer.ListenAndServe(); err != nil {
+	// 		log.Fatal("Unable to start a http server.")
+	// 	}
+	// }()
 
 	//服务器反射方法，客户端可以获取到server元数据
 	reflection.Register(s)
@@ -132,35 +135,35 @@ func main() {
 //			log.Fatalf("Failed to serve zPages")
 //		}
 //	}
-var (
-	// Create a metrics registry.
-	reg = prometheus.NewRegistry()
+// var (
+// 	// Create a metrics registry.
+// 	reg = prometheus.NewRegistry()
 
-	// Create some standard server metrics.
-	grpcMetrics = grpc_prometheus.NewServerMetrics()
-)
+// 	// Create some standard server metrics.
+// 	grpcMetrics = grpc_prometheus.NewServerMetrics()
+// )
 
-func init() {
-	// Register standard server metrics and customized metrics to registry.
-	reg.MustRegister(grpcMetrics, service.CustomizedCounterMetric)
-}
+// func init() {
+// 	// Register standard server metrics and customized metrics to registry.
+// 	reg.MustRegister(grpcMetrics, service.CustomizedCounterMetric)
+// }
 
-func initTracing() {
-	// This is a demo app with low QPS. trace.AlwaysSample() is used here
-	// to make sure traces are available for observation and analysis.
-	// In a production environment or high QPS setup please use
-	// trace.ProbabilitySampler set at the desired probability.
-	trace.ApplyConfig(trace.Config{DefaultSampler: trace.AlwaysSample()})
-	agentEndpointURI := "localhost:6831"
-	collectorEndpointURI := "http://localhost:14268/api/traces"
-	exporter, err := jaeger.NewExporter(jaeger.Options{
-		CollectorEndpoint: collectorEndpointURI,
-		AgentEndpoint:     agentEndpointURI,
-		ServiceName:       "grpc-server",
-	})
-	if err != nil {
-		log.Fatal(err)
-	}
-	trace.RegisterExporter(exporter)
+// func initTracing() {
+// 	// This is a demo app with low QPS. trace.AlwaysSample() is used here
+// 	// to make sure traces are available for observation and analysis.
+// 	// In a production environment or high QPS setup please use
+// 	// trace.ProbabilitySampler set at the desired probability.
+// 	trace.ApplyConfig(trace.Config{DefaultSampler: trace.AlwaysSample()})
+// 	agentEndpointURI := "localhost:6831"
+// 	collectorEndpointURI := "http://localhost:14268/api/traces"
+// 	exporter, err := jaeger.NewExporter(jaeger.Options{
+// 		CollectorEndpoint: collectorEndpointURI,
+// 		AgentEndpoint:     agentEndpointURI,
+// 		ServiceName:       "grpc-server",
+// 	})
+// 	if err != nil {
+// 		log.Fatal(err)
+// 	}
+// 	trace.RegisterExporter(exporter)
 
-}
+// }
